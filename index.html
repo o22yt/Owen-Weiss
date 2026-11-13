@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Silhouette — Daily Country Guess</title>
+  <meta name="description" content="A new country every day. Guess it from its blank outline; every wrong guess reveals a new clue." />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <button class="icon-btn" id="btn-help" aria-label="How to play" title="How to play">?</button>
+    <div class="brand">
+      <h1>Silhouette</h1>
+      <p class="puzzle-no" id="puzzle-no"></p>
+    </div>
+    <button class="icon-btn" id="btn-stats" aria-label="Statistics" title="Statistics">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M4 20h3V10H4v10zm6.5 0h3V4h-3v16zM17 20h3v-7h-3v7z"/></svg>
+    </button>
+  </header>
+
+  <main class="wrap">
+    <section class="map-card" aria-label="Mystery country">
+      <svg id="map" viewBox="0 0 600 400" role="img" aria-label="Outline of today's mystery country"></svg>
+      <div class="map-label" id="map-label" hidden></div>
+    </section>
+
+    <section class="guess-area">
+      <form id="guess-form" autocomplete="off">
+        <div class="combo">
+          <input id="guess-input" type="text" placeholder="Type a country…" aria-label="Country guess"
+                 role="combobox" aria-expanded="false" aria-controls="suggestions" aria-autocomplete="list" />
+          <ul id="suggestions" role="listbox" hidden></ul>
+        </div>
+        <button type="submit" id="guess-btn">Guess</button>
+      </form>
+      <p class="message" id="message" aria-live="polite"></p>
+      <ol class="guesses" id="guesses"></ol>
+    </section>
+
+    <section aria-label="Clues">
+      <h2 class="section-title">Clues <span id="clue-count"></span></h2>
+      <div class="clues" id="clues"></div>
+    </section>
+  </main>
+
+  <dialog id="dlg-result" class="modal">
+    <button class="close" data-close aria-label="Close">×</button>
+    <div id="result-body"></div>
+  </dialog>
+
+  <dialog id="dlg-stats" class="modal">
+    <button class="close" data-close aria-label="Close">×</button>
+    <div id="stats-body"></div>
+  </dialog>
+
+  <dialog id="dlg-help" class="modal">
+    <button class="close" data-close aria-label="Close">×</button>
+    <h2>How to play</h2>
+    <p>Every day there's a new mystery country, shown only as a blank outline. You have <strong>6 guesses</strong>.</p>
+    <p>Each wrong guess tells you how far away and in which direction the mystery country is, and unlocks a new clue:</p>
+    <ol class="help-list">
+      <li>Region &amp; hemisphere</li>
+      <li>The map zooms out to show the neighbours</li>
+      <li>Size &amp; coastline</li>
+      <li>Languages, currency &amp; the capital's first letter</li>
+      <li>The flag</li>
+    </ol>
+    <p class="muted">A new country unlocks at midnight, your local time.</p>
+  </dialog>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="vendor/d3.min.js"></script>
+  <script src="vendor/topojson-client.min.js"></script>
+  <script src="data/world.js"></script>
+  <script src="data/countries.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
