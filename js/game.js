@@ -3,7 +3,8 @@
   "use strict";
 
   const MAX_GUESSES = 6;
-  const EPOCH = Date.UTC(2026, 0, 1); // puzzle #1
+  const EPOCH = Date.UTC(2026, 0, 1); // anchors the country rotation (do not change)
+  const LAUNCH = Date.UTC(2026, 10, 12); // launch day = puzzle #1
   const SHUFFLE_SEED = 20260101;
   const EARTH_KM = 6371;
   const W = 600, H = 400, PAD = 36;
@@ -46,6 +47,7 @@
     return isNaN(day) ? 0 : day;
   }
   const DAY = todayIndex();
+  const PUZZLE_NO = DAY - Math.round((LAUNCH - EPOCH) / 864e5) + 1;
   const POOL = dailyPool();
   const ANSWER = byId.get(POOL[((DAY % POOL.length) + POOL.length) % POOL.length]);
 
@@ -337,7 +339,7 @@
       return "🟩".repeat(full) + (pct % 20 >= 10 && full < 5 ? "🟨" : "") + "⬜".repeat(Math.max(0, 5 - full - (pct % 20 >= 10 && full < 5 ? 1 : 0))) + " " + arrow;
     });
     const score = state.status === "won" ? state.guesses.length : "X";
-    return `Silhouette #${DAY + 1} ${score}/${MAX_GUESSES}\n${rows.join("\n")}`;
+    return `Silhouette #${PUZZLE_NO} ${score}/${MAX_GUESSES}\n${rows.join("\n")}`;
   }
   function countdown() {
     const now = new Date(), next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
@@ -401,7 +403,7 @@
     if (done) setZoom(true, animate);
   }
 
-  $("#puzzle-no").textContent = `#${DAY + 1} · ${new Date(EPOCH + DAY * 864e5).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
+  $("#puzzle-no").textContent = `#${PUZZLE_NO} · ${new Date(EPOCH + DAY * 864e5).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
   redraw();
   render(false);
 
