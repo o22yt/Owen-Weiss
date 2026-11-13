@@ -98,7 +98,8 @@
     .clipAngle(100)
     .fitExtent([[PAD, PAD], [W - PAD, H - PAD]], focus);
   const closeScale = projection.scale();
-  const farScale = closeScale / 3.2;
+  // Zoom out ~3x, but always far enough to show at least ~1,500 km across.
+  const farScale = Math.min(closeScale / 3.2, W / (1500 / EARTH_KM));
   const path = d3.geoPath(projection);
 
   const gContext = svg.append("g");
@@ -133,13 +134,14 @@
   // ---------- clues ----------
   const fmt = new Intl.NumberFormat("en-US");
   const list = (arr) => arr.length <= 1 ? (arr[0] || "—") : arr.slice(0, -1).join(", ") + " and " + arr.at(-1);
-  const flagUrl = (c) => `https://flagcdn.com/w320/${c.cca2.toLowerCase()}.png`;
+  const flagUrl = (c) => (window.FLAGS && window.FLAGS[c.cca2]) || "";
   function ordinal(n) {
     const s = ["th", "st", "nd", "rd"], v = n % 100;
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
   function sizeComparison(area) {
-    const refs = [["Texas", 695662], ["France", 551695], ["the UK", 242495], ["Portugal", 92212], ["Belgium", 30528], ["Luxembourg", 2586]];
+    const refs = [["Texas", 695662, "-"], ["France", 551695, "FRA"], ["the UK", 242495, "GBR"], ["Portugal", 92212, "PRT"],
+      ["Belgium", 30528, "BEL"], ["Luxembourg", 2586, "LUX"], ["Andorra", 468, "AND"]].filter((r) => r[2] !== ANSWER.id);
     const [name, a] = refs.find(([, a]) => area >= a * 0.35) || refs.at(-1);
     const r = area / a;
     if (r > 1.15) return `about ${r >= 10 ? Math.round(r) : r.toFixed(1)}× the size of ${name}`;
@@ -335,7 +337,7 @@
       return "🟩".repeat(full) + (pct % 20 >= 10 && full < 5 ? "🟨" : "") + "⬜".repeat(Math.max(0, 5 - full - (pct % 20 >= 10 && full < 5 ? 1 : 0))) + " " + arrow;
     });
     const score = state.status === "won" ? state.guesses.length : "X";
-    return `Silhouette #${DAY + 1} ${score}/${MAX_GUESSES}\n${rows.join("\n")}\n${location.origin === "null" ? "" : location.href.split("?")[0]}`.trim();
+    return `Silhouette #${DAY + 1} ${score}/${MAX_GUESSES}\n${rows.join("\n")}`;
   }
   function countdown() {
     const now = new Date(), next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
@@ -360,15 +362,20 @@
       <div class="actions">
         <div class="countdown">Next country in<b id="cd">${countdown()}</b></div>
         <button class="share-btn" id="share">Share</button>
-      </div>`;
+      </div>
+      <textarea id="share-text" class="share-text" rows="8" readonly hidden></textarea>`;
     clearInterval(timer);
     timer = setInterval(() => { const el = $("#cd"); if (el) el.textContent = countdown(); if (countdown() === "00:00:00") location.reload(); }, 1000);
-    $("#share").onclick = async () => {
+    $("#share").onclick = () => {
       const text = shareText();
+      const fallback = () => {
+        const box = $("#share-text");
+        box.value = text; box.hidden = false; box.select();
+        toast("Select and copy your result");
+      };
       try {
-        if (navigator.share && matchMedia("(pointer: coarse)").matches) await navigator.share({ text });
-        else { await navigator.clipboard.writeText(text); toast("Copied to clipboard"); }
-      } catch { /* user cancelled */ }
+        navigator.clipboard.writeText(text).then(() => toast("Copied to clipboard"), fallback);
+      } catch { fallback(); }
     };
     $("#dlg-result").showModal();
   }

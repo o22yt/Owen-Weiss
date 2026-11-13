@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /*
- * Builds the game's data files from two npm packages:
+ * Builds the game's data files from three npm packages:
  *   - world-atlas      (Natural Earth 1:50m country shapes, TopoJSON)
  *   - world-countries  (country metadata: capitals, languages, borders, ...)
+ *   - flag-icons       (flag SVGs)
  *
  * Output (plain <script> files so the game works straight from file:// too):
  *   data/world.js      -> window.WORLD_TOPO     (TopoJSON, geometry ids = ISO alpha-3)
  *   data/countries.js  -> window.COUNTRIES      (metadata for every guessable country)
+ *   data/flags.js      -> window.FLAGS          (flag SVGs as data: URIs, keyed by ISO alpha-2)
  *
  * Usage:  npm install && npm run build:data
  */
@@ -71,6 +73,15 @@ fs.writeFileSync(
   path.join(out, "countries.js"),
   "window.COUNTRIES=" + JSON.stringify(countries) + ";\n"
 );
+const flags = {};
+for (const c of countries) {
+  const file = path.join(path.dirname(require.resolve("flag-icons/package.json")), "flags", "4x3", c.cca2.toLowerCase() + ".svg");
+  if (fs.existsSync(file)) {
+    const svg = fs.readFileSync(file, "utf8").replace(/\s+/g, " ").trim();
+    flags[c.cca2] = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  } else console.warn("No flag for", c.name);
+}
+fs.writeFileSync(path.join(out, "flags.js"), "window.FLAGS=" + JSON.stringify(flags) + ";\n");
 console.log(
   `Wrote ${countries.length} countries (${countries.filter((c) => c.daily).length} eligible as daily answers).`
 );
